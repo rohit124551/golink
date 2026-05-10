@@ -1,7 +1,7 @@
 export async function trackClick(slug, request, env) {
   try {
-    const ip = request.headers.get('CF-Connecting-IP') || ''
-    const country = request.cf?.country || 'Unknown'
+    const ip = request.headers.get('CF-Connecting-IP') || '0.0.0.0'
+    const country = request.headers.get('CF-IPCountry') || 'Unknown'
     const userAgent = request.headers.get('User-Agent') || ''
     const referrer = request.headers.get('Referer') || 'Direct'
 
@@ -11,7 +11,9 @@ export async function trackClick(slug, request, env) {
     // Extract UTM parameters or Query Params for better tracking
     const url = new URL(request.url)
     const utmSource = url.searchParams.get('utm_source') || url.searchParams.get('utm') || url.searchParams.get('ref')
-    const finalReferrer = utmSource ? `Campaign: ${utmSource}` : referrer
+    const finalReferrer = utmSource ? `Campaign: ${utmSource}` : (referrer || 'Direct')
+
+    console.log(`Tracking click - IP: ${ip}, Country: ${country}, Referrer: ${finalReferrer}`)
 
     // Call the unified RPC that handles both stats and detailed logging
     const response = await fetch(
