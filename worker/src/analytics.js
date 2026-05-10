@@ -3,17 +3,22 @@ export async function trackClick(slug, request, env) {
     const ip = request.headers.get('CF-Connecting-IP') || '0.0.0.0'
     const country = request.headers.get('CF-IPCountry') || 'Unknown'
     const userAgent = request.headers.get('User-Agent') || ''
-    const referrer = request.headers.get('Referer') || 'Direct'
+    const rawReferrer = request.headers.get('Referer')
+    const referrer = (rawReferrer && rawReferrer.trim() !== '') ? rawReferrer : 'Direct'
 
     const deviceType = getDeviceType(userAgent)
     const browser = getBrowser(userAgent)
 
     // Extract UTM parameters or Query Params for better tracking
     const url = new URL(request.url)
-    const utmSource = url.searchParams.get('utm_source') || url.searchParams.get('utm') || url.searchParams.get('ref')
-    const finalReferrer = utmSource ? `Campaign: ${utmSource}` : (referrer || 'Direct')
+    const utm = url.searchParams.get('utm_source') || url.searchParams.get('utm') || url.searchParams.get('ref') || url.searchParams.get('source')
+    
+    let finalReferrer = referrer
+    if (utm) {
+      finalReferrer = `Campaign: ${utm}`
+    }
 
-    console.log(`Tracking click - IP: ${ip}, Country: ${country}, Referrer: ${finalReferrer}`)
+    console.log(`[Analytics] Slug: ${slug}, IP: ${ip}, Country: ${country}, Referrer: ${finalReferrer}`)
 
     // Call the unified RPC that handles both stats and detailed logging
     const response = await fetch(
