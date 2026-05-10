@@ -7,7 +7,7 @@ const PASSTHROUGH_PATHS = new Set(['/', '/login', '/dashboard'])
 const DASHBOARD_PREFIX = '/dashboard/'
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url)
     const path = url.pathname
 
@@ -42,7 +42,7 @@ export default {
     // 4. Fire analytics asynchronously
     const userAgent = request.headers.get('User-Agent') || ''
     if (!isBot(userAgent)) {
-      env.ctx?.waitUntil(trackClick(slug, request, env))
+      ctx.waitUntil(trackClick(slug, request, env))
     }
 
     return Response.redirect(result.url, 301)
