@@ -30,30 +30,13 @@ export default {
     const slug = path.slice(1)
 
     if (!slug || !isValidSlug(slug)) {
-      return new Response('Not found', { status: 404 })
+      return fetch(request) // Let React app show 404
     }
 
     const result = await handleRedirect(slug, env)
 
-    if (!result) {
-      return new Response('Link not found', {
-        status: 404,
-        headers: { 'Content-Type': 'text/plain' },
-      })
-    }
-
-    if (result.expired) {
-      return new Response('Gone — this link has expired', {
-        status: 410,
-        headers: { 'Content-Type': 'text/plain' },
-      })
-    }
-
-    if (result.disabled) {
-      return new Response('This link is disabled', {
-        status: 404,
-        headers: { 'Content-Type': 'text/plain' },
-      })
+    if (!result || result.expired || result.disabled) {
+      return fetch(request) // Let React app show 404
     }
 
     // Fire analytics asynchronously — don't block the redirect
