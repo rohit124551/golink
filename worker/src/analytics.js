@@ -8,6 +8,11 @@ export async function trackClick(slug, request, env) {
     const deviceType = getDeviceType(userAgent)
     const browser = getBrowser(userAgent)
 
+    // Extract UTM parameters or Query Params for better tracking
+    const url = new URL(request.url)
+    const utmSource = url.searchParams.get('utm_source') || url.searchParams.get('utm') || url.searchParams.get('ref')
+    const finalReferrer = utmSource ? `Campaign: ${utmSource}` : referrer
+
     // Call the unified RPC that handles both stats and detailed logging
     const response = await fetch(
       `${env.SUPABASE_URL}/rest/v1/rpc/increment_click_count`,
@@ -24,7 +29,7 @@ export async function trackClick(slug, request, env) {
           p_country: country,
           p_device_type: deviceType,
           p_browser: browser,
-          p_referrer: referrer
+          p_referrer: finalReferrer
         }),
       }
     )
