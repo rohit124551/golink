@@ -1,28 +1,39 @@
 const CACHE_TTL = 60 // seconds
 
 export async function handleRedirect(slug, env) {
+  console.log(`Checking slug: ${slug}`)
   // 1. Check KV cache first
   const cached = await env.GOLINK_CACHE.get(`slug:${slug}`, { type: 'json' })
   if (cached) {
+    console.log(`Cache hit for slug: ${slug}`, cached)
     if (cached.expired) return { expired: true }
     if (!cached.is_active) return { disabled: true }
     return { url: cached.destination_url }
   }
+
+  console.log(`Cache miss for slug: ${slug}, fetching from Supabase...`)
+  console.log(`Using URL: ${env.SUPABASE_URL}`)
+  console.log(`Service Key length: ${env.SUPABASE_SERVICE_KEY?.length || 0}`)
 
   // 2. Fallback to Supabase
   const res = await fetch(
     `${env.SUPABASE_URL}/rest/v1/short_links?slug=eq.${encodeURIComponent(slug)}&select=slug,destination_url,is_active,expires_at`,
     {
       headers: {
-        apikey: env.SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
+        apikey: env.SUPABASE_SERVICE_KEY,
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
       },
     }
   )
 
-  if (!res.ok) return null
+  if (!res.ok) {
+    const errorText = await res.text()
+    console.error(`Supabase fetch failed: ${res.status} ${res.statusText}`, errorText)
+    return null
+  }
 
   const data = await res.json()
+  console.log(`Supabase response data:`, data)
   const link = data?.[0]
 
   if (!link) return null
