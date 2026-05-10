@@ -10,6 +10,7 @@ import Analytics from './pages/Analytics.tsx'
 import Settings from './pages/Settings.tsx'
 import LinkDetail from './pages/LinkDetail.tsx'
 import NotFound from './pages/NotFound.tsx'
+import RedirectHandler from './components/RedirectHandler.tsx'
 import './styles/globals.css'
 
 const queryClient = new QueryClient({
@@ -39,6 +40,7 @@ export default function App() {
                 <Route path="/dashboard/settings" element={<Settings />} />
               </Route>
 
+              <Route path="/:slug" element={<RedirectHandler />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
