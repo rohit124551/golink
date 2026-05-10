@@ -1,37 +1,14 @@
 export async function trackClick(slug, request, env) {
   try {
     const ip = request.headers.get('CF-Connecting-IP') || ''
-    const ipHash = await hashIP(ip, env.IP_SALT || 'default-salt')
-    const country = request.headers.get('CF-IPCountry') || null
+    const country = request.cf?.country || 'Unknown'
     const userAgent = request.headers.get('User-Agent') || ''
-    const referrer = request.headers.get('Referer') || null
+    const referrer = request.headers.get('Referer') || 'Direct'
 
     const deviceType = getDeviceType(userAgent)
     const browser = getBrowser(userAgent)
 
-    const payload = {
-      slug,
-      clicked_at: new Date().toISOString(),
-      country,
-      device_type: deviceType,
-      browser,
-      referrer,
-      ip_hash: ipHash,
-    }
-
-    // Write click to Supabase (using service key)
-    await fetch(`${env.SUPABASE_URL}/rest/v1/link_clicks`, {
-      method: 'POST',
-      headers: {
-        apikey: env.SUPABASE_SERVICE_KEY,
-        Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify(payload),
-    })
-
-    // Increment click_count on short_links
+    // Call the unified RPC that handles both stats and detailed logging
     await fetch(
       `${env.SUPABASE_URL}/rest/v1/rpc/increment_click_count`,
       {
@@ -41,7 +18,14 @@ export async function trackClick(slug, request, env) {
           Authorization: `Bearer ${env.SUPABASE_SERVICE_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ p_slug: slug, p_ip_hash: ipHash }),
+        body: JSON.stringify({ 
+          p_slug: slug, 
+          p_ip_hash: ip,
+          p_country: country,
+          p_device_type: deviceType,
+          p_browser: browser,
+          p_referrer: referrer
+        }),
       }
     )
   } catch (err) {

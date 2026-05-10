@@ -39,7 +39,7 @@ export default {
       return fetch(request) // Let React app show 404
     }
 
-    // Fire analytics asynchronously — don't block the redirect
+    // 4. Fire analytics asynchronously
     const userAgent = request.headers.get('User-Agent') || ''
     if (!isBot(userAgent)) {
       env.ctx?.waitUntil(trackClick(slug, request, env))
