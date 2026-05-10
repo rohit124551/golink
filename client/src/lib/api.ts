@@ -69,7 +69,7 @@ export async function fetchClicksForSlug(slug: string, days = 30) {
 export async function fetchRecentClicks(slug: string, limit = 50) {
   const { data, error } = await supabase
     .from('link_clicks')
-    .select('clicked_at, country, device_type, browser, referrer')
+    .select('clicked_at, country, device_type, browser, referrer, ip_address')
     .eq('slug', slug)
     .order('clicked_at', { ascending: false })
     .limit(limit)

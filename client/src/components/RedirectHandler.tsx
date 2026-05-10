@@ -34,33 +34,41 @@ export default function RedirectHandler() {
           return
         }
 
-        // 3. Detect Analytics Details (Browser/Device)
-        const userAgent = navigator.userAgent
+        // 3. Detect Analytics Details (Browser/Device/OS)
+        const ua = navigator.userAgent
         const referrer = document.referrer || 'Direct'
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(userAgent)
-        const deviceType = isMobile ? 'Mobile' : 'Desktop'
         
+        // Better Browser Detection
         let browser = 'Other'
-        if (userAgent.includes('Chrome')) browser = 'Chrome'
-        else if (userAgent.includes('Firefox')) browser = 'Firefox'
-        else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) browser = 'Safari'
-        else if (userAgent.includes('Edge')) browser = 'Edge'
+        if (ua.includes('Firefox')) browser = 'Firefox'
+        else if (ua.includes('SamsungBrowser')) browser = 'Samsung Browser'
+        else if (ua.includes('Opera') || ua.includes('OPR')) browser = 'Opera'
+        else if (ua.includes('Trident')) browser = 'IE'
+        else if (ua.includes('Edge')) browser = 'Edge'
+        else if (ua.includes('Chrome')) browser = 'Chrome'
+        else if (ua.includes('Safari')) browser = 'Safari'
 
-        // 4. Fetch IP and Country (using a free API)
+        const deviceType = /iPhone|iPad|iPod|Android/i.test(ua) ? 'Mobile' : 'Desktop'
+
+        // 4. Fetch IP and Country (using a more reliable combo)
         let ip = 'Unknown'
         let country = 'Unknown'
         try {
-          const ipRes = await fetch('https://ipapi.co/json/').then(r => r.json())
-          ip = ipRes.ip || 'Unknown'
-          country = ipRes.country_name || 'Unknown'
+          // Use cloudflare's trace as a fallback or a more open API
+          const res = await fetch('https://ipapi.co/json/')
+          if (res.ok) {
+            const data = await res.json()
+            ip = data.ip || 'Unknown'
+            country = data.country_name || 'Unknown'
+          }
         } catch (e) {
-          console.warn('Could not fetch IP details:', e)
+          console.warn('IP lookup failed:', e)
         }
 
         // 5. Track click with full details
         await supabase.rpc('increment_click_count', { 
           p_slug: slug,
-          p_ip_hash: ip, // Use real IP as hash for accurate unique clicks!
+          p_ip_hash: ip,
           p_device_type: deviceType,
           p_browser: browser,
           p_referrer: referrer,

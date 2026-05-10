@@ -190,6 +190,7 @@ export default function LinkDetail() {
                 <thead>
                   <tr>
                     <th>Timestamp</th>
+                    <th>IP Address</th>
                     <th>Country</th>
                     <th>Device</th>
                     <th>Browser</th>
@@ -204,6 +205,9 @@ export default function LinkDetail() {
                     <tr key={i} style={{ cursor: 'default' }}>
                       <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                         {formatDateTime(click.clicked_at)}
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-tertiary)' }}>
+                        {click.ip_address || '—'}
                       </td>
                       <td style={{ fontSize: '12px' }}>
                         {click.country
