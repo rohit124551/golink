@@ -9,7 +9,7 @@ export async function trackClick(slug, request, env) {
     const browser = getBrowser(userAgent)
 
     // Call the unified RPC that handles both stats and detailed logging
-    await fetch(
+    const response = await fetch(
       `${env.SUPABASE_URL}/rest/v1/rpc/increment_click_count`,
       {
         method: 'POST',
@@ -28,6 +28,13 @@ export async function trackClick(slug, request, env) {
         }),
       }
     )
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error(`Supabase RPC Error (${response.status}):`, errorText)
+    } else {
+      console.log(`Successfully tracked click for /${slug}`)
+    }
   } catch (err) {
     console.error('Analytics error:', err)
   }
