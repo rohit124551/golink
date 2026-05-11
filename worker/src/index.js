@@ -45,7 +45,7 @@ export default {
       ctx.waitUntil(trackClick(slug, request, env))
     }
 
-    return Response.redirect(result.url, 301)
+    return Response.redirect(result.url, 302)
   },
 }
 

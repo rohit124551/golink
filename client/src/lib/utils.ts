@@ -112,8 +112,14 @@ export function getCountryFlag(code: string) {
 
 export function getReferrerDomain(referrer?: string) {
   if (!referrer) return 'Direct / unknown'
+  if (referrer === 'Direct' || referrer.startsWith('Campaign:')) return referrer;
+  
   try {
-    return new URL(referrer).hostname.replace('www.', '')
+    const url = new URL(referrer)
+    if (url.protocol === 'http:' || url.protocol === 'https:') {
+      return url.hostname.replace('www.', '')
+    }
+    return referrer
   } catch {
     return referrer
   }
